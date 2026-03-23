@@ -297,7 +297,11 @@ class GPT(nn.Module):
         flops_per_fwdbwd = flops_per_token * T
         flops_per_iter = flops_per_fwdbwd * fwdbwd_per_iter
         # express our flops throughput as ratio of A100 bfloat16 peak flops
-        flops_achieved = flops_per_iter * (1.0/dt) # per second
+        # 添加一个极小值保护，防止除以 0
+        # 如果 dt 为 0 或非常小，则设为一个最小阈值（例如 1e-6 秒）
+        if dt == 0:
+            dt = 1e-6
+        flops_achieved = flops_per_iter * (1.0 / dt)  # per second # per second
         flops_promised = 312e12 # A100 GPU bfloat16 peak flops is 312 TFLOPS
         mfu = flops_achieved / flops_promised
         return mfu
